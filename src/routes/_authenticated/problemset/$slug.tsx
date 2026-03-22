@@ -1,3 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { languagesQuery, problemQuery } from "@/lib/queries";
 
-export const Route = createFileRoute("/_authenticated/problemset/$slug")({});
+export const Route = createFileRoute("/_authenticated/problemset/$slug")({
+  loader: async ({ context, params }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(problemQuery(params.slug)),
+      context.queryClient.ensureQueryData(languagesQuery),
+    ]);
+  },
+});

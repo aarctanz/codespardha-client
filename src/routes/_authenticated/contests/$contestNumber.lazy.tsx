@@ -41,7 +41,7 @@ function ContestDetailPage() {
   const status = getContestStatus(contest, time.serverTime);
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">{contest.title}</h1>
         <p className="text-muted-foreground">{contest.description}</p>

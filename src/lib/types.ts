@@ -71,6 +71,14 @@ export interface SubmissionDetail extends Submission {
   testResults: TestResult[];
 }
 
+export interface RunResult {
+  status: string;
+  time: number;
+  memory: number;
+  compileOutput: string | null;
+  testCases: TestResult[];
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   page: number;

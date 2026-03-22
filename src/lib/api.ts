@@ -4,17 +4,19 @@ export async function apiFetch<T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> {
+  const { headers: extraHeaders, ...rest } = options ?? {};
   const res = await fetch(`${BASE_URL}${path}`, {
     credentials: "include",
+    ...rest,
     headers: {
       "Content-Type": "application/json",
-      ...options?.headers,
+      ...(extraHeaders as Record<string, string>),
     },
-    ...options,
   });
 
   if (!res.ok) {
-    throw new Error(`API error ${res.status}: ${res.statusText}`);
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `API error ${res.status}: ${res.statusText}`);
   }
 
   return res.json();

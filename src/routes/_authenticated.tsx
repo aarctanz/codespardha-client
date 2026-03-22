@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated")({
   component: () => (
     <div className="min-h-screen">
       <Navbar />
-      <main className="container mx-auto px-4 py-6">
+      <main className="px-4 py-6">
         <Outlet />
       </main>
     </div>

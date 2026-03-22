@@ -29,7 +29,7 @@ function SubmissionsPage() {
     navigate({ to: "/submissions", search: { page: p } });
 
   return (
-    <div className="space-y-4">
+    <div className="container mx-auto space-y-4">
       <h1 className="text-2xl font-bold">Submissions</h1>
       {data.items.length === 0 ? (
         <p className="text-muted-foreground">No submissions yet.</p>
