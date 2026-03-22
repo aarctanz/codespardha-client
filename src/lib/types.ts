@@ -58,6 +58,8 @@ export interface TestResult {
   status: string;
   timeSec: number;
   memoryKb: number;
+  stdin: string;
+  expectedOutput: string;
   stdout: string;
   stderr: string;
   exitCode: number;
@@ -67,6 +69,14 @@ export interface SubmissionDetail extends Submission {
   sourceCode: string;
   compileOutput: string | null;
   testResults: TestResult[];
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 }
 
 export interface ServerTime {

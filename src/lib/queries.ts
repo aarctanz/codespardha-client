@@ -8,6 +8,7 @@ import type {
   Language,
   Submission,
   SubmissionDetail,
+  PaginatedResponse,
   ServerTime,
 } from "./types";
 
@@ -39,10 +40,14 @@ export const languagesQuery = queryOptions({
   staleTime: Infinity,
 });
 
-export const submissionsQuery = queryOptions({
-  queryKey: ["submissions"],
-  queryFn: () => apiFetch<Submission[]>("/submissions/"),
-});
+export const submissionsQuery = (page: number = 1) =>
+  queryOptions({
+    queryKey: ["submissions", page],
+    queryFn: () =>
+      apiFetch<PaginatedResponse<Submission>>(
+        `/submissions/?page=${page}`,
+      ),
+  });
 
 export const submissionQuery = (id: string) =>
   queryOptions({

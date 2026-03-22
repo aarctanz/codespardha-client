@@ -1,6 +1,12 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { ChevronRight } from "lucide-react";
 import { submissionQuery } from "@/lib/queries";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export const Route = createLazyFileRoute("/_authenticated/submissions/$id")({
   component: SubmissionDetailPage,
@@ -69,19 +75,66 @@ function SubmissionDetailPage() {
       {submission.testResults.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold">Test Results</h2>
-          <div className="mt-2 flex gap-1">
+          <div className="mt-2 space-y-2">
             {submission.testResults.map((tr) => (
-              <div
-                key={tr.position}
-                className={`h-6 w-6 rounded text-center text-xs leading-6 ${
-                  tr.status === "accepted"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-                title={`Test ${tr.position}: ${tr.status}`}
-              >
-                {tr.position}
-              </div>
+              <Collapsible key={tr.position} defaultOpen={false}>
+                <div className="rounded-md border">
+                  <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-4 p-3 text-sm hover:bg-muted/50">
+                    <ChevronRight className="size-4 transition-transform [[data-panel-open]_&]:rotate-90" />
+                    <span className="font-medium">Test {tr.position}</span>
+                    <span
+                      className={
+                        tr.status === "accepted"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }
+                    >
+                      {tr.status.replace(/_/g, " ")}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {tr.timeSec}s
+                    </span>
+                    <span className="text-muted-foreground">
+                      {Math.round(tr.memoryKb / 1024)} MB
+                    </span>
+                    {tr.exitCode !== 0 && (
+                      <span className="text-muted-foreground">
+                        exit code {tr.exitCode}
+                      </span>
+                    )}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="border-t p-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-md border p-2">
+                        <span className="text-xs font-medium text-muted-foreground">stdin</span>
+                        <pre className="mt-1 overflow-x-auto text-xs">
+                          {tr.stdin || "—"}
+                        </pre>
+                      </div>
+                      <div className="rounded-md border p-2">
+                        <span className="text-xs font-medium text-muted-foreground">expected output</span>
+                        <pre className="mt-1 overflow-x-auto text-xs">
+                          {tr.expectedOutput || "—"}
+                        </pre>
+                      </div>
+                      <div className="rounded-md border p-2">
+                        <span className="text-xs font-medium text-muted-foreground">stdout</span>
+                        <pre className="mt-1 overflow-x-auto text-xs">
+                          {tr.stdout || "—"}
+                        </pre>
+                      </div>
+                    </div>
+                    {tr.stderr && (
+                      <div className="mt-2">
+                        <span className="text-xs font-medium text-muted-foreground">stderr</span>
+                        <pre className="mt-1 overflow-x-auto rounded bg-muted p-2 text-xs">
+                          {tr.stderr}
+                        </pre>
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
             ))}
           </div>
         </div>
