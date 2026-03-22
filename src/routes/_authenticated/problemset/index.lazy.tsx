@@ -1,5 +1,6 @@
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { CircleCheck } from "lucide-react";
 import { problemsetQuery } from "@/lib/queries";
 import {
   Table,
@@ -35,7 +36,9 @@ function ProblemsetPage() {
           <TableBody>
             {problems.map((problem) => (
               <TableRow key={problem.slug}>
-                <TableCell>{problem.solved ? "✓" : ""}</TableCell>
+                <TableCell>
+                  {problem.solved && <CircleCheck className="size-4 text-green-600" />}
+                </TableCell>
                 <TableCell>
                   <Link
                     to="/problemset/$slug"

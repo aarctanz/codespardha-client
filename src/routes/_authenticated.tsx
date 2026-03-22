@@ -10,14 +10,14 @@ export const Route = createFileRoute("/_authenticated")({
     if (!res.ok) {
       throw redirect({
         to: "/login",
-        search: { redirect: location.href },
+        search: { redirect: location.pathname },
       });
     }
     const session = await res.json();
     if (!session?.user) {
       throw redirect({
         to: "/login",
-        search: { redirect: location.href },
+        search: { redirect: location.pathname },
       });
     }
     return { session };

@@ -1,5 +1,6 @@
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { CircleCheck } from "lucide-react";
 import { contestQuery, serverTimeQuery } from "@/lib/queries";
 import type { Contest } from "@/lib/types";
 import {
@@ -95,7 +96,9 @@ function ContestDetailPage() {
                   </Link>
                 </TableCell>
                 <TableCell>{problem.difficulty}</TableCell>
-                <TableCell>{problem.solved ? "✓" : ""}</TableCell>
+                <TableCell>
+                  {problem.solved && <CircleCheck className="size-4 text-green-600" />}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

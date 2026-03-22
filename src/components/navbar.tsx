@@ -16,10 +16,10 @@ export function Navbar() {
   return (
     <header className="border-b">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
+        <Link to="/" className="text-lg font-bold">
+          Spring
+        </Link>
         <nav className="flex items-center gap-6">
-          <Link to="/" className="text-lg font-bold">
-            Spring
-          </Link>
           <Link
             to="/problemset"
             className="text-sm text-muted-foreground hover:text-foreground"
@@ -38,7 +38,6 @@ export function Navbar() {
           >
             Submissions
           </Link>
-        </nav>
         {session?.user && (
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -67,12 +66,23 @@ export function Navbar() {
               >
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => authClient.signOut()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  authClient.signOut({
+                    fetchOptions: {
+                      onSuccess: () => {
+                        window.location.href = "/login";
+                      },
+                    },
+                  })
+                }
+              >
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+        </nav>
       </div>
     </header>
   );

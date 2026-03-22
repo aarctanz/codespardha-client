@@ -13,12 +13,11 @@ function HomePage() {
         A competitive programming platform for NIT Kurukshetra.
       </p>
       <div className="flex gap-4">
-        <Button render={<Link to="/problemset" />}>Problemset</Button>
-        <Button variant="outline" render={<Link to="/contests" />}>
-          Contests
+        <Button variant="outline" render={<Link to="/problemset" />}>
+          Explore Problems
         </Button>
-        <Button variant="outline" render={<Link to="/submissions" />}>
-          Submissions
+        <Button variant="outline" render={<Link to="/contests" />}>
+          Explore Contests
         </Button>
       </div>
     </div>

@@ -18,7 +18,7 @@ function LoginPage() {
   const handleGoogleSignIn = () => {
     authClient.signIn.social({
       provider: "google",
-      callbackURL: redirectTo,
+      callbackURL: window.location.origin + redirectTo,
     });
   };
 
