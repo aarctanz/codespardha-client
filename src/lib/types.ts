@@ -1,0 +1,92 @@
+export interface Problem {
+  slug: string;
+  label: string;
+  title: string;
+  description: string;
+  difficulty: number;
+  score: number;
+  timeLimitMs: number;
+  memoryLimitMb: number;
+  visibleFrom: string;
+  solved: boolean;
+  tags: string[];
+}
+
+export interface TestCase {
+  input: string;
+  expectedOutput: string;
+  order: number;
+}
+
+export interface ProblemDetail extends Problem {
+  testCases: TestCase[];
+}
+
+export interface Contest {
+  contestNumber: number;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface ContestDetail extends Contest {
+  problems: Problem[];
+}
+
+export interface Language {
+  engineLanguageId: number;
+  name: string;
+  version: string;
+}
+
+export interface Submission {
+  id: string;
+  slug: string;
+  problemTitle: string;
+  languageName: string;
+  engineLanguageId: number;
+  status: string;
+  score: number;
+  timeSec: number | null;
+  memoryKb: number | null;
+  createdAt: string;
+}
+
+export interface TestResult {
+  position: number;
+  status: string;
+  timeSec: number;
+  memoryKb: number;
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
+
+export interface SubmissionDetail extends Submission {
+  sourceCode: string;
+  compileOutput: string | null;
+  testResults: TestResult[];
+}
+
+export interface ServerTime {
+  serverTime: string;
+}
+
+export interface Session {
+  session: {
+    id: string;
+    expiresAt: string;
+    token: string;
+    userId: string;
+  };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image?: string;
+    role: string;
+    rollNumber: string;
+  };
+}

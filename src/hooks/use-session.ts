@@ -1,15 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-
-interface Session {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    image?: string;
-    rollNumber?: string;
-  };
-}
+import type { Session } from "@/lib/types";
 
 export function useSession() {
   return useQuery<Session | null>({
