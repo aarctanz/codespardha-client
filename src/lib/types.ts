@@ -91,6 +91,14 @@ export interface ServerTime {
   serverTime: string;
 }
 
+export interface ProfileStats {
+  solved: { easy: number; medium: number; hard: number; total: number };
+  total: { easy: number; medium: number; hard: number; total: number };
+  submissions: number;
+  accepted: number;
+  acceptanceRate: number;
+}
+
 export interface Session {
   session: {
     id: string;

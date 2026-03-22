@@ -9,6 +9,7 @@ import type {
   Submission,
   SubmissionDetail,
   PaginatedResponse,
+  ProfileStats,
   ServerTime,
 } from "./types";
 
@@ -54,6 +55,11 @@ export const submissionQuery = (id: string) =>
     queryKey: ["submission", id],
     queryFn: () => apiFetch<SubmissionDetail>(`/submissions/${id}`),
   });
+
+export const profileStatsQuery = queryOptions({
+  queryKey: ["profileStats"],
+  queryFn: () => apiFetch<ProfileStats>("/profile/stats"),
+});
 
 export const serverTimeQuery = queryOptions({
   queryKey: ["serverTime"],
