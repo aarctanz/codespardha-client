@@ -60,7 +60,7 @@ function ContestDetailPage() {
           <span
             className={
               status === "Running"
-                ? "text-green-600"
+                ? "text-verdict-accepted"
                 : status === "Upcoming"
                   ? "text-blue-600"
                   : "text-muted-foreground"
@@ -97,7 +97,7 @@ function ContestDetailPage() {
                 </TableCell>
                 <TableCell>{problem.difficulty}</TableCell>
                 <TableCell>
-                  {problem.solved && <CircleCheck className="size-4 text-green-600" />}
+                  {problem.solved && <CircleCheck className="size-4 text-verdict-accepted" />}
                 </TableCell>
               </TableRow>
             ))}

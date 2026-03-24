@@ -62,8 +62,8 @@ function SubmissionsPage() {
                   <TableCell
                     className={
                       sub.status === "accepted"
-                        ? "text-green-600"
-                        : "text-red-600"
+                        ? "text-verdict-accepted"
+                        : "text-verdict-failed"
                     }
                   >
                     {sub.status.replace(/_/g, " ")}

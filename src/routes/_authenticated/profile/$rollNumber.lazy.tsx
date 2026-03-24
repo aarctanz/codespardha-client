@@ -59,9 +59,9 @@ function ProfilePage() {
 
       {/* Difficulty breakdown */}
       <div className="grid grid-cols-3 gap-4">
-        <DifficultyCard label="Easy" solved={stats.solved.easy} total={stats.total.easy} color="text-green-500" />
+        <DifficultyCard label="Easy" solved={stats.solved.easy} total={stats.total.easy} color="text-verdict-accepted" />
         <DifficultyCard label="Medium" solved={stats.solved.medium} total={stats.total.medium} color="text-yellow-500" />
-        <DifficultyCard label="Hard" solved={stats.solved.hard} total={stats.total.hard} color="text-red-500" />
+        <DifficultyCard label="Hard" solved={stats.solved.hard} total={stats.total.hard} color="text-verdict-failed" />
       </div>
 
       {/* Recent submissions */}
@@ -97,8 +97,8 @@ function ProfilePage() {
                     <span
                       className={
                         sub.status === "accepted"
-                          ? "text-green-500"
-                          : "text-red-500"
+                          ? "text-verdict-accepted"
+                          : "text-verdict-failed"
                       }
                     >
                       {sub.status.replace(/_/g, " ")}

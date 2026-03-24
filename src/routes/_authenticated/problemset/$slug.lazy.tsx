@@ -365,7 +365,7 @@ function ResultsPanel({
         )}
         {error && (
           <div className="py-2">
-            <p className="text-sm text-red-500">{error}</p>
+            <p className="text-sm text-verdict-failed">{error}</p>
           </div>
         )}
         {results && <RunResultsContent results={results} />}
@@ -378,8 +378,8 @@ function RunResultsContent({ results }: { results: RunResult }) {
   if (results.compileOutput) {
     return (
       <div>
-        <p className="text-sm font-medium text-red-500">Compilation Error</p>
-        <pre className="mt-1 text-sm text-red-400">{results.compileOutput}</pre>
+        <p className="text-sm font-medium text-verdict-failed">Compilation Error</p>
+        <pre className="mt-1 text-sm text-verdict-failed">{results.compileOutput}</pre>
       </div>
     );
   }
@@ -390,7 +390,7 @@ function RunResultsContent({ results }: { results: RunResult }) {
   return (
     <div className="space-y-3">
       <p className="text-sm">
-        <span className={passed === total ? "text-green-500" : "text-red-500"}>
+        <span className={passed === total ? "text-verdict-accepted" : "text-verdict-failed"}>
           {passed}/{total} test cases passed
         </span>
       </p>
@@ -407,7 +407,7 @@ function TestResultRow({ result }: { result: TestResult }) {
     <div className="space-y-2 rounded border p-3">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">Test {result.position}</span>
-        <span className={passed ? "text-green-500" : "text-red-500"}>
+        <span className={passed ? "text-verdict-accepted" : "text-verdict-failed"}>
           {result.status.replace(/_/g, " ")}
         </span>
       </div>
@@ -428,7 +428,7 @@ function TestResultRow({ result }: { result: TestResult }) {
       {result.stderr && (
         <div className="text-xs">
           <p className="font-medium text-muted-foreground">stderr</p>
-          <pre className="rounded bg-muted p-1.5 text-red-400">
+          <pre className="rounded bg-muted p-1.5 text-verdict-failed">
             {result.stderr}
           </pre>
         </div>

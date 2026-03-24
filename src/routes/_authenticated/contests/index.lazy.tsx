@@ -74,7 +74,7 @@ function ContestsPage() {
                     <span
                       className={
                         status === "Running"
-                          ? "text-green-600"
+                          ? "text-verdict-accepted"
                           : status === "Upcoming"
                             ? "text-blue-600"
                             : "text-muted-foreground"

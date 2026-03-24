@@ -37,7 +37,7 @@ function ProblemsetPage() {
             {problems.map((problem) => (
               <TableRow key={problem.slug}>
                 <TableCell>
-                  {problem.solved && <CircleCheck className="size-4 text-green-600" />}
+                  <CircleCheck className={`size-4 ${problem.solved ? "text-verdict-accepted" : "text-muted-foreground/30"}`} />
                 </TableCell>
                 <TableCell>
                   <Link

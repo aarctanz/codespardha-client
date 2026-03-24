@@ -58,14 +58,14 @@ function SubmissionDetailPage() {
         </div>
       ) : (
         <>
-          <div className="flex gap-6 text-sm">
+          <div className="flex gap-6 text-base">
             <div>
               <span className="text-muted-foreground">Verdict: </span>
               <span
                 className={
                   submission.status === "accepted"
-                    ? "text-green-600"
-                    : "text-red-600"
+                    ? "text-verdict-accepted"
+                    : "text-verdict-failed"
                 }
               >
                 {submission.status.replace(/_/g, " ")}
@@ -113,14 +113,12 @@ function SubmissionDetailPage() {
                     <div className="rounded-md border">
                       <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-4 p-3 text-sm hover:bg-muted/50">
                         <ChevronRight className="size-4 transition-transform [[data-panel-open]_&]:rotate-90" />
-                        <span className="font-medium">
-                          Test {tr.position}
-                        </span>
+                        <span className="font-medium">Test {tr.position}</span>
                         <span
                           className={
                             tr.status === "accepted"
-                              ? "text-green-600"
-                              : "text-red-600"
+                              ? "text-verdict-accepted"
+                              : "text-verdict-failed"
                           }
                         >
                           {tr.status.replace(/_/g, " ")}
