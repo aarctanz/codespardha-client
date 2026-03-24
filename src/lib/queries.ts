@@ -61,6 +61,15 @@ export const profileStatsQuery = queryOptions({
   queryFn: () => apiFetch<ProfileStats>("/profile/stats"),
 });
 
+export const approachQuery = (slug: string) =>
+  queryOptions({
+    queryKey: ["approach", slug],
+    queryFn: () =>
+      apiFetch<{ content: string }>(`/problemset/${slug}/approach`).catch(
+        () => ({ content: "" }),
+      ),
+  });
+
 export const serverTimeQuery = queryOptions({
   queryKey: ["serverTime"],
   queryFn: () => apiFetch<ServerTime>("/time"),

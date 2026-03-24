@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
-import { useSuspenseQuery, useMutation } from "@tanstack/react-query";
-import { problemQuery, languagesQuery } from "@/lib/queries";
+import {
+  useSuspenseQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { problemQuery, languagesQuery, approachQuery } from "@/lib/queries";
 import { apiFetch } from "@/lib/api";
 import type { RunResult, TestResult } from "@/lib/types";
 import ReactMarkdown from "react-markdown";
 import Editor from "@monaco-editor/react";
-import { Loader2, GripHorizontal, X } from "lucide-react";
+import { Loader2, GripHorizontal, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -42,68 +46,119 @@ function formatTimeLimit(ms: number): string {
   return `${ms}ms`;
 }
 
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function getCodeStorageKey(slug: string, languageId: number | null) {
+  return `spring:code:${slug}:${languageId ?? "none"}`;
+}
+
 function ProblemPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: problem } = useSuspenseQuery(problemQuery(slug));
   const { data: languages } = useSuspenseQuery(languagesQuery);
+  const { data: approachData } = useSuspenseQuery(approachQuery(slug));
   const isDark = useIsDark();
 
-  const storageKey = `spring:code:${slug}`;
+  const [activeTab, setActiveTab] = useState<"approach" | "code">(
+    approachData.content ? "code" : "approach",
+  );
 
-  const [sourceCode, setSourceCode] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.code ?? "";
-      }
-    } catch {}
-    return "";
+  // Approach state
+  const [approach, setApproach] = useState(() => {
+    const saved = sessionStorage.getItem(`spring:approach:${slug}`);
+    return saved ?? approachData.content ?? "";
   });
+
+  const hasApproach = !!approachData.content;
+  const wordCount = countWords(approach);
+  const approachValid = wordCount >= 20 && wordCount <= 500;
+
+  // Language state
   const [languageId, setLanguageId] = useState<number | null>(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (
-          parsed.languageId &&
-          languages.some((l) => l.engineLanguageId === parsed.languageId)
-        ) {
-          return parsed.languageId;
-        }
-      }
-    } catch {}
+    const savedLang = sessionStorage.getItem(`spring:lang:${slug}`);
+    if (savedLang) {
+      const id = Number(savedLang);
+      if (languages.some((l) => l.engineLanguageId === id)) return id;
+    }
     return languages[0]?.engineLanguageId ?? null;
   });
+
+  // Code state — per language per problem
+  const codeKey = getCodeStorageKey(slug, languageId);
+  const [sourceCode, setSourceCode] = useState(() => {
+    return sessionStorage.getItem(codeKey) ?? "";
+  });
+
+  // When language changes, load code for that language from sessionStorage
+  const prevCodeKeyRef = useRef(codeKey);
+  useEffect(() => {
+    if (prevCodeKeyRef.current !== codeKey) {
+      setSourceCode(sessionStorage.getItem(codeKey) ?? "");
+      prevCodeKeyRef.current = codeKey;
+    }
+  }, [codeKey]);
+
   const [showPanel, setShowPanel] = useState(false);
   const [panelHeight, setPanelHeight] = useState(200);
   const [runResults, setRunResults] = useState<RunResult | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
 
-  // Save code to localStorage (throttled on change)
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const saveToStorage = useCallback(() => {
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify({ code: sourceCode, languageId }),
-    );
-  }, [storageKey, sourceCode, languageId]);
-
+  // Debounced save: code to sessionStorage
+  const codeSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(saveToStorage, 1000);
+    if (codeSaveTimerRef.current) clearTimeout(codeSaveTimerRef.current);
+    codeSaveTimerRef.current = setTimeout(() => {
+      sessionStorage.setItem(codeKey, sourceCode);
+      if (languageId !== null) {
+        sessionStorage.setItem(`spring:lang:${slug}`, String(languageId));
+      }
+    }, 1000);
     return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      if (codeSaveTimerRef.current) clearTimeout(codeSaveTimerRef.current);
     };
-  }, [saveToStorage]);
+  }, [sourceCode, codeKey, languageId, slug]);
+
+  // Debounced save: approach to sessionStorage
+  const approachSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (approachSaveTimerRef.current) clearTimeout(approachSaveTimerRef.current);
+    approachSaveTimerRef.current = setTimeout(() => {
+      sessionStorage.setItem(`spring:approach:${slug}`, approach);
+    }, 1000);
+    return () => {
+      if (approachSaveTimerRef.current) clearTimeout(approachSaveTimerRef.current);
+    };
+  }, [approach, slug]);
+
+  const saveCodeNow = useCallback(() => {
+    sessionStorage.setItem(codeKey, sourceCode);
+    if (languageId !== null) {
+      sessionStorage.setItem(`spring:lang:${slug}`, String(languageId));
+    }
+  }, [codeKey, sourceCode, languageId, slug]);
 
   const selectedLanguage = languages.find(
     (l) => l.engineLanguageId === languageId,
   );
-
   const monacoLanguage = getMonacoLanguage(selectedLanguage?.name ?? "");
+
+  // Save approach mutation
+  const approachMutation = useMutation({
+    mutationFn: () =>
+      apiFetch(`/problemset/${slug}/approach`, {
+        method: "POST",
+        body: JSON.stringify({ content: approach }),
+      }),
+    onSuccess: () => {
+      queryClient.setQueryData(approachQuery(slug).queryKey, {
+        content: approach,
+      });
+    },
+  });
 
   const runMutation = useMutation({
     mutationFn: () =>
@@ -116,7 +171,7 @@ function ProblemPage() {
         }),
       }),
     onMutate: () => {
-      saveToStorage();
+      saveCodeNow();
       setRunResults(null);
       setRunError(null);
       setShowPanel(true);
@@ -135,13 +190,16 @@ function ProblemPage() {
           sourceCode,
         }),
       }),
-    onMutate: () => saveToStorage(),
+    onMutate: () => saveCodeNow(),
     onSuccess: (data) => {
       navigate({ to: "/submissions/$id", params: { id: data.submissionId } });
     },
   });
 
-  const isBusy = runMutation.isPending || submitMutation.isPending;
+  const isBusy =
+    runMutation.isPending ||
+    submitMutation.isPending ||
+    approachMutation.isPending;
 
   return (
     <div className="flex h-[calc(100vh-5rem)] gap-4">
@@ -200,72 +258,175 @@ function ProblemPage() {
 
       {/* Right panel - Editor + results */}
       <div className="flex min-w-0 flex-1 flex-col rounded-lg border">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between border-b px-4 py-2">
-          <Select
-            value={languageId?.toString()}
-            onValueChange={(val) => setLanguageId(Number(val))}
+        {/* Tabs */}
+        <div className="flex items-center border-b">
+          <button
+            onClick={() => setActiveTab("approach")}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === "approach"
+                ? "border-b-2 border-primary text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <SelectTrigger>
-              <SelectValue>
-                {selectedLanguage
-                  ? `${selectedLanguage.name} (${selectedLanguage.version})`
-                  : "Select language"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map((lang) => (
-                <SelectItem
-                  key={lang.engineLanguageId}
-                  value={lang.engineLanguageId.toString()}
-                >
-                  {lang.name} ({lang.version})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            Approach
+            {!hasApproach && (
+              <span className="ml-1.5 inline-block size-1.5 rounded-full bg-destructive" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("code")}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === "code"
+                ? "border-b-2 border-primary text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Code
+          </button>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => runMutation.mutate()}
-              disabled={isBusy || !languageId}
-            >
-              {runMutation.isPending && (
-                <Loader2 className="size-4 animate-spin" />
-              )}
-              {runMutation.isPending ? "Running..." : "Run"}
-            </Button>
-            <Button
-              onClick={() => submitMutation.mutate()}
-              disabled={isBusy || !languageId}
-            >
-              {submitMutation.isPending && (
-                <Loader2 className="size-4 animate-spin" />
-              )}
-              {submitMutation.isPending ? "Submitting..." : "Submit"}
-            </Button>
+          {/* Toolbar - right side */}
+          <div className="ml-auto flex items-center gap-2 px-4">
+            {activeTab === "code" && (
+              <Select
+                value={languageId?.toString()}
+                onValueChange={(val) => setLanguageId(Number(val))}
+              >
+                <SelectTrigger>
+                  <SelectValue>
+                    {selectedLanguage
+                      ? `${selectedLanguage.name} (${selectedLanguage.version})`
+                      : "Select language"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.map((lang) => (
+                    <SelectItem
+                      key={lang.engineLanguageId}
+                      value={lang.engineLanguageId.toString()}
+                    >
+                      {lang.name} ({lang.version})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {activeTab === "approach" && (
+              <Button
+                variant="outline"
+                onClick={() => approachMutation.mutate()}
+                disabled={isBusy || !approachValid}
+              >
+                {approachMutation.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                {approachMutation.isPending ? "Saving..." : "Save Approach"}
+              </Button>
+            )}
+
+            {activeTab === "code" && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => runMutation.mutate()}
+                  disabled={isBusy || !languageId || !hasApproach}
+                >
+                  {runMutation.isPending && (
+                    <Loader2 className="size-4 animate-spin" />
+                  )}
+                  {runMutation.isPending ? "Running..." : "Run"}
+                </Button>
+                <Button
+                  onClick={() => submitMutation.mutate()}
+                  disabled={isBusy || !languageId || !hasApproach}
+                >
+                  {submitMutation.isPending && (
+                    <Loader2 className="size-4 animate-spin" />
+                  )}
+                  {submitMutation.isPending ? "Submitting..." : "Submit"}
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Editor */}
+        {/* Approach tab hint */}
+        {activeTab === "code" && !hasApproach && (
+          <div className="bg-muted/50 px-4 py-2 text-sm text-muted-foreground">
+            You must{" "}
+            <button
+              className="font-medium text-primary underline underline-offset-2"
+              onClick={() => setActiveTab("approach")}
+            >
+              submit an approach
+            </button>{" "}
+            before you can run or submit code.
+          </div>
+        )}
+
+        {/* Editor area */}
         <div className="min-h-0 flex-1">
-          <Editor
-            language={monacoLanguage}
-            value={sourceCode}
-            onChange={(val) => setSourceCode(val ?? "")}
-            theme={isDark ? "vs-dark" : "vs"}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              padding: { top: 12 },
-              scrollBeyondLastLine: false,
-            }}
-          />
+          {activeTab === "approach" ? (
+            <div className="flex h-full flex-col">
+              <Editor
+                language="markdown"
+                value={approach}
+                onChange={(val) => setApproach(val ?? "")}
+                theme={isDark ? "vs-dark" : "vs"}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  padding: { top: 12 },
+                  scrollBeyondLastLine: false,
+                  wordWrap: "on",
+                  lineNumbers: "off",
+                }}
+              />
+              <div className="flex items-center justify-between border-t px-4 py-1.5 text-xs text-muted-foreground">
+                <span>
+                  Write your approach to solving this problem (20–500 words)
+                </span>
+                <span
+                  className={
+                    wordCount < 20 || wordCount > 500
+                      ? "text-destructive"
+                      : "text-verdict-accepted"
+                  }
+                >
+                  {wordCount}/500 words
+                </span>
+              </div>
+              {approachMutation.isError && (
+                <div className="px-4 pb-2 text-sm text-destructive">
+                  {approachMutation.error.message}
+                </div>
+              )}
+              {approachMutation.isSuccess && (
+                <div className="px-4 pb-2 text-sm text-verdict-accepted">
+                  Approach saved successfully
+                </div>
+              )}
+            </div>
+          ) : (
+            <Editor
+              language={monacoLanguage}
+              value={sourceCode}
+              onChange={(val) => setSourceCode(val ?? "")}
+              theme={isDark ? "vs-dark" : "vs"}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                padding: { top: 12 },
+                scrollBeyondLastLine: false,
+              }}
+            />
+          )}
         </div>
 
         {/* Resizable results panel */}
-        {showPanel && (
+        {showPanel && activeTab === "code" && (
           <ResultsPanel
             height={panelHeight}
             onHeightChange={setPanelHeight}
@@ -314,7 +475,10 @@ function ResultsPanel({
       const onMouseMove = (e: MouseEvent) => {
         if (!dragging.current) return;
         const delta = startY.current - e.clientY;
-        const newHeight = Math.max(100, Math.min(500, startHeight.current + delta));
+        const newHeight = Math.max(
+          100,
+          Math.min(500, startHeight.current + delta),
+        );
         onHeightChange(newHeight);
       };
 
@@ -378,19 +542,29 @@ function RunResultsContent({ results }: { results: RunResult }) {
   if (results.compileOutput) {
     return (
       <div>
-        <p className="text-sm font-medium text-verdict-failed">Compilation Error</p>
-        <pre className="mt-1 text-sm text-verdict-failed">{results.compileOutput}</pre>
+        <p className="text-sm font-medium text-verdict-failed">
+          Compilation Error
+        </p>
+        <pre className="mt-1 text-sm text-verdict-failed">
+          {results.compileOutput}
+        </pre>
       </div>
     );
   }
 
-  const passed = results.testCases.filter((t) => t.status === "accepted").length;
+  const passed = results.testCases.filter(
+    (t) => t.status === "accepted",
+  ).length;
   const total = results.testCases.length;
 
   return (
     <div className="space-y-3">
       <p className="text-sm">
-        <span className={passed === total ? "text-verdict-accepted" : "text-verdict-failed"}>
+        <span
+          className={
+            passed === total ? "text-verdict-accepted" : "text-verdict-failed"
+          }
+        >
           {passed}/{total} test cases passed
         </span>
       </p>
@@ -407,7 +581,9 @@ function TestResultRow({ result }: { result: TestResult }) {
     <div className="space-y-2 rounded border p-3">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">Test {result.position}</span>
-        <span className={passed ? "text-verdict-accepted" : "text-verdict-failed"}>
+        <span
+          className={passed ? "text-verdict-accepted" : "text-verdict-failed"}
+        >
           {result.status.replace(/_/g, " ")}
         </span>
       </div>
