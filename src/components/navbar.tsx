@@ -20,8 +20,9 @@ export function Navbar() {
   return (
     <header className="border-b">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        <Link to="/" className="text-lg font-bold">
-          Spring
+        <Link to="/" className="flex items-center gap-2 text-lg font-bold">
+          <img src="/logo.webp" alt="Codespardha" className="size-8" />
+          Codespardha
         </Link>
         <nav className="flex items-center gap-6">
           <Link
