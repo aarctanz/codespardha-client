@@ -1,7 +1,8 @@
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { contestsQuery, serverTimeQuery } from "@/lib/queries";
+import { contestsQuery } from "@/lib/queries";
 import { useSession } from "@/hooks/use-session";
+import { useServerNow } from "@/hooks/use-server-now";
 import { Button } from "@/components/ui/button";
 import type { Contest } from "@/lib/types";
 import {
@@ -28,32 +29,48 @@ function getContestStatus(
   return "running";
 }
 
-function formatTimeLeft(target: Date, now: Date): string {
-  const diff = target.getTime() - now.getTime();
-  if (diff <= 0) return "0m";
+function formatCountdown(diff: number): string {
+  if (diff <= 0) return "0s";
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
+  const secs = Math.floor((diff % (1000 * 60)) / 1000);
+  const parts: string[] = [];
+  if (hours > 0) parts.push(`${hours}h`);
+  if (mins > 0) parts.push(`${mins}m`);
+  parts.push(`${secs}s`);
+  return parts.join(" ");
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 function HomePage() {
   const { data: session } = useSession();
   const { data: contests } = useQuery(contestsQuery);
-  const { data: serverTime } = useQuery(serverTimeQuery);
-
-  const now = serverTime ? new Date(serverTime.serverTime) : new Date();
+  const now = useServerNow();
 
   const runningContests =
     contests?.filter((c) => getContestStatus(c, now) === "running") ?? [];
-  const upcomingContests =
+
+  const allUpcoming =
     contests
       ?.filter((c) => getContestStatus(c, now) === "upcoming")
       .sort(
         (a, b) =>
           new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-      )
-      .slice(0, 3) ?? [];
+      ) ?? [];
+
+  const todayContests = allUpcoming.filter((c) =>
+    isSameDay(new Date(c.startTime), now),
+  );
+  const upcomingContests = allUpcoming
+    .filter((c) => !isSameDay(new Date(c.startTime), now))
+    .slice(0, 3);
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 
@@ -95,7 +112,45 @@ function HomePage() {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right text-sm text-muted-foreground">
-                <span>Ends in {formatTimeLeft(new Date(contest.endTime), now)}</span>
+                <span>Ends in {formatCountdown(new Date(contest.endTime).getTime() - now.getTime())}</span>
+              </div>
+              <ArrowRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+            </div>
+          </div>
+        </Link>
+      ))}
+
+      {/* Today's upcoming contest banner with live countdown */}
+      {todayContests.map((contest) => (
+        <Link
+          key={contest.contestNumber}
+          to="/contests/$contestNumber"
+          params={{ contestNumber: String(contest.contestNumber) }}
+          className="group block rounded-lg border border-blue-500/30 bg-blue-500/5 p-5 shadow-md shadow-blue-500/5 transition-all hover:border-blue-500/50 hover:bg-blue-500/10 hover:shadow-lg hover:shadow-blue-500/10"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-blue-500/15">
+                <Clock className="size-5 text-blue-500" />
+              </div>
+              <div>
+                <span className="text-xs font-medium uppercase tracking-wide text-blue-500">
+                  Today
+                </span>
+                <h2 className="text-lg font-semibold">{contest.title}</h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="font-mono text-sm font-medium tabular-nums">
+                  {formatCountdown(new Date(contest.startTime).getTime() - now.getTime())}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(contest.startTime).toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
               <ArrowRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
             </div>
