@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { contestQuery, serverTimeQuery } from "@/lib/queries";
+import { RouteError } from "@/components/route-error";
 
 export const Route = createFileRoute(
   "/_authenticated/contests/$contestNumber",
@@ -10,4 +11,5 @@ export const Route = createFileRoute(
       context.queryClient.ensureQueryData(serverTimeQuery),
     ]);
   },
+  errorComponent: RouteError,
 });

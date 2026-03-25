@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { approachQuery, languagesQuery, problemQuery } from "@/lib/queries";
+import { RouteError } from "@/components/route-error";
 
 export const Route = createFileRoute("/_authenticated/problemset/$slug")({
   loader: async ({ context, params }) => {
@@ -9,4 +10,5 @@ export const Route = createFileRoute("/_authenticated/problemset/$slug")({
       context.queryClient.ensureQueryData(approachQuery(params.slug)),
     ]);
   },
+  errorComponent: RouteError,
 });

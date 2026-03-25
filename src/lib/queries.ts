@@ -10,6 +10,8 @@ import type {
   SubmissionDetail,
   PaginatedResponse,
   ProfileStats,
+  PublicProfile,
+  Leaderboard,
   ServerTime,
 } from "./types";
 
@@ -60,6 +62,21 @@ export const profileStatsQuery = queryOptions({
   queryKey: ["profileStats"],
   queryFn: () => apiFetch<ProfileStats>("/profile/stats"),
 });
+
+export const publicProfileQuery = (rollNumber: string) =>
+  queryOptions({
+    queryKey: ["profile", rollNumber],
+    queryFn: () => apiFetch<PublicProfile>(`/profile/${rollNumber}`),
+  });
+
+export const leaderboardQuery = (contestNumber: string, page: number = 1) =>
+  queryOptions({
+    queryKey: ["leaderboard", contestNumber, page],
+    queryFn: () =>
+      apiFetch<Leaderboard>(
+        `/contests/${contestNumber}/leaderboard?page=${page}&pageSize=50`,
+      ),
+  });
 
 export const approachQuery = (slug: string) =>
   queryOptions({

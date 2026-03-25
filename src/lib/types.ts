@@ -99,6 +99,44 @@ export interface ProfileStats {
   acceptanceRate: number;
 }
 
+export interface PublicProfile extends ProfileStats {
+  name: string;
+  image: string;
+  rollNumber: string;
+}
+
+export interface ProblemBreakdown {
+  label: string;
+  slug: string;
+  solved: boolean;
+  score: number;
+  wrongAttempts: number;
+  attempts: number;
+  firstAcTime: string | null;
+}
+
+export interface StandingEntry {
+  rank: number;
+  name: string;
+  rollNumber: string;
+  image: string | null;
+  totalScore: number;
+  penalty: number;
+  problemsSolved: number;
+  lastAcceptedAt: string | null;
+  breakdown: ProblemBreakdown[];
+}
+
+export interface Leaderboard {
+  ended: boolean;
+  currentUser: StandingEntry | null;
+  standings: StandingEntry[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface Session {
   session: {
     id: string;
