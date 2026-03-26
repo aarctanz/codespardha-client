@@ -79,7 +79,7 @@ function ProblemPage() {
 
   // Language state
   const [languageId, setLanguageId] = useState<number | null>(() => {
-    const savedLang = sessionStorage.getItem(`spring:lang:${slug}`);
+    const savedLang = localStorage.getItem("spring:lang");
     if (savedLang) {
       const id = Number(savedLang);
       if (languages.some((l) => l.engineLanguageId === id)) return id;
@@ -114,13 +114,13 @@ function ProblemPage() {
     codeSaveTimerRef.current = setTimeout(() => {
       sessionStorage.setItem(codeKey, sourceCode);
       if (languageId !== null) {
-        sessionStorage.setItem(`spring:lang:${slug}`, String(languageId));
+        localStorage.setItem("spring:lang", String(languageId));
       }
     }, 1000);
     return () => {
       if (codeSaveTimerRef.current) clearTimeout(codeSaveTimerRef.current);
     };
-  }, [sourceCode, codeKey, languageId, slug]);
+  }, [sourceCode, codeKey, languageId]);
 
   // Debounced save: approach to sessionStorage
   const approachSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -137,9 +137,9 @@ function ProblemPage() {
   const saveCodeNow = useCallback(() => {
     sessionStorage.setItem(codeKey, sourceCode);
     if (languageId !== null) {
-      sessionStorage.setItem(`spring:lang:${slug}`, String(languageId));
+      localStorage.setItem("spring:lang", String(languageId));
     }
-  }, [codeKey, sourceCode, languageId, slug]);
+  }, [codeKey, sourceCode, languageId]);
 
   const selectedLanguage = languages.find(
     (l) => l.engineLanguageId === languageId,

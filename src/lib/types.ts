@@ -2,12 +2,12 @@ export interface Problem {
   slug: string;
   label: string;
   title: string;
-  description: string;
+  description?: string;
   difficulty: number;
   score: number;
-  timeLimitMs: number;
-  memoryLimitMb: number;
-  visibleFrom: string;
+  timeLimitMs?: number;
+  memoryLimitMb?: number;
+  visibleFrom?: string;
   solved: boolean;
   tags: string[];
 }
@@ -19,6 +19,10 @@ export interface TestCase {
 }
 
 export interface ProblemDetail extends Problem {
+  description: string;
+  timeLimitMs: number;
+  memoryLimitMb: number;
+  visibleFrom: string;
   testCases: TestCase[];
 }
 

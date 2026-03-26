@@ -2,6 +2,7 @@ import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CircleCheck } from "lucide-react";
 import { problemsetQuery } from "@/lib/queries";
+import { DifficultyBadge } from "@/components/difficulty-badge";
 import {
   Table,
   TableBody,
@@ -29,7 +30,7 @@ function ProblemsetPage() {
             <TableRow>
               <TableHead className="w-16">Status</TableHead>
               <TableHead>Title</TableHead>
-              <TableHead className="w-24">Rating</TableHead>
+              <TableHead className="w-24">Difficulty</TableHead>
               <TableHead>Tags</TableHead>
             </TableRow>
           </TableHeader>
@@ -48,7 +49,9 @@ function ProblemsetPage() {
                     {problem.label}. {problem.title}
                   </Link>
                 </TableCell>
-                <TableCell>{problem.difficulty}</TableCell>
+                <TableCell>
+                  <DifficultyBadge difficulty={problem.difficulty} />
+                </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
                   {problem.tags.join(", ")}
                 </TableCell>

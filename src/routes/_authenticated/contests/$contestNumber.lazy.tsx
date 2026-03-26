@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { CircleCheck, Trophy, ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { useSuspenseQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CircleCheck, Trophy, ChevronLeft, ChevronRight, Clock, Loader2 } from "lucide-react";
 import { contestQuery, leaderboardQuery } from "@/lib/queries";
 import { useServerNow } from "@/hooks/use-server-now";
 import type { Contest, Problem, StandingEntry, ProblemBreakdown } from "@/lib/types";
+import { DifficultyBadge } from "@/components/difficulty-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,9 +55,37 @@ function formatTime(iso: string) {
 
 function ContestDetailPage() {
   const { contestNumber } = Route.useParams();
+  const queryClient = useQueryClient();
   const { data: contest } = useSuspenseQuery(contestQuery(contestNumber));
   const now = useServerNow();
   const status = getContestStatus(contest, now);
+
+  // When contest transitions from Upcoming → Running, refetch to get problems
+  const prevStatusRef = useRef(status);
+  useEffect(() => {
+    if (prevStatusRef.current === "Upcoming" && status === "Running") {
+      // Small delay to let server settle, then refetch
+      const timer = setTimeout(() => {
+        queryClient.invalidateQueries({
+          queryKey: contestQuery(contestNumber).queryKey,
+        });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+    prevStatusRef.current = status;
+  }, [status, contestNumber, queryClient]);
+
+  // Also keep refetching while Running but no problems loaded yet
+  useEffect(() => {
+    if (status === "Running" && contest.problems.length === 0) {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries({
+          queryKey: contestQuery(contestNumber).queryKey,
+        });
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [status, contest.problems.length, contestNumber, queryClient]);
 
   const [activeTab, setActiveTab] = useState<"problems" | "leaderboard">(
     "problems",
@@ -144,11 +173,16 @@ function ContestDetailPage() {
           <p className="text-muted-foreground">
             Problems will be revealed when the contest starts.
           </p>
+        ) : contest.problems.length === 0 ? (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            <span>Loading problems...</span>
+          </div>
         ) : (
           <ProblemsTable problems={contest.problems} />
         )
       ) : (
-        <LeaderboardSection contestNumber={contestNumber} />
+        <LeaderboardSection contestNumber={contestNumber} contestStart={contest.startTime} />
       )}
     </div>
   );
@@ -165,7 +199,7 @@ function ProblemsTable({ problems }: { problems: Problem[] }) {
         <TableRow>
           <TableHead className="w-16">Label</TableHead>
           <TableHead>Title</TableHead>
-          <TableHead className="w-24">Rating</TableHead>
+          <TableHead className="w-24">Difficulty</TableHead>
           <TableHead className="w-16">Status</TableHead>
         </TableRow>
       </TableHeader>
@@ -182,7 +216,9 @@ function ProblemsTable({ problems }: { problems: Problem[] }) {
                 {problem.title}
               </Link>
             </TableCell>
-            <TableCell>{problem.difficulty}</TableCell>
+            <TableCell>
+              <DifficultyBadge difficulty={problem.difficulty} />
+            </TableCell>
             <TableCell>
               {problem.solved && (
                 <CircleCheck className="size-4 text-verdict-accepted" />
@@ -195,7 +231,7 @@ function ProblemsTable({ problems }: { problems: Problem[] }) {
   );
 }
 
-function LeaderboardSection({ contestNumber }: { contestNumber: string }) {
+function LeaderboardSection({ contestNumber, contestStart }: { contestNumber: string; contestStart: string }) {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useQuery(leaderboardQuery(contestNumber, page));
 
@@ -316,7 +352,7 @@ function LeaderboardSection({ contestNumber }: { contestNumber: string }) {
                   );
                   return (
                     <TableCell key={label} className="text-center">
-                      <ProblemCell breakdown={pb ?? null} />
+                      <ProblemCell breakdown={pb ?? null} contestStart={contestStart} />
                     </TableCell>
                   );
                 })}
@@ -361,7 +397,13 @@ function LeaderboardSection({ contestNumber }: { contestNumber: string }) {
   );
 }
 
-function ProblemCell({ breakdown }: { breakdown: ProblemBreakdown | null }) {
+function ProblemCell({
+  breakdown,
+  contestStart,
+}: {
+  breakdown: ProblemBreakdown | null;
+  contestStart: string;
+}) {
   if (!breakdown) {
     return <span className="text-muted-foreground/30">—</span>;
   }
@@ -374,7 +416,7 @@ function ProblemCell({ breakdown }: { breakdown: ProblemBreakdown | null }) {
         </span>
         {breakdown.firstAcTime && (
           <p className="text-[10px] text-muted-foreground">
-            {formatAcTime(breakdown.firstAcTime)}
+            {formatElapsed(contestStart, breakdown.firstAcTime)}
           </p>
         )}
       </div>
@@ -388,10 +430,11 @@ function ProblemCell({ breakdown }: { breakdown: ProblemBreakdown | null }) {
   );
 }
 
-function formatAcTime(time: string): string {
-  const d = new Date(time);
-  const h = d.getUTCHours();
-  const m = d.getUTCMinutes();
+function formatElapsed(start: string, end: string): string {
+  const diff = new Date(end).getTime() - new Date(start).getTime();
+  const totalMins = Math.floor(diff / 60000);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
   if (h > 0) return `${h}h${m > 0 ? ` ${m}m` : ""}`;
   return `${m}m`;
 }

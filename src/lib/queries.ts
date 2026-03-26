@@ -35,6 +35,7 @@ export const contestQuery = (contestNumber: string) =>
   queryOptions({
     queryKey: ["contest", contestNumber],
     queryFn: () => apiFetch<ContestDetail>(`/contests/${contestNumber}`),
+    staleTime: 1000 * 60 * 5,
   });
 
 export const languagesQuery = queryOptions({
