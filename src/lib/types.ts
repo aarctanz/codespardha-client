@@ -56,13 +56,13 @@ export interface Submission {
 export interface TestResult {
   position: number;
   status: string;
-  timeSec: number;
-  memoryKb: number;
-  stdin: string;
-  expectedOutput: string;
-  stdout: string;
-  stderr: string;
-  exitCode: number;
+  timeSec?: number;
+  memoryKb?: number;
+  stdin?: string;
+  expectedOutput?: string;
+  stdout?: string;
+  stderr?: string;
+  exitCode?: number;
 }
 
 export interface SubmissionDetail extends Submission {

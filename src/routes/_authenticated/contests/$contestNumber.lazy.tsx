@@ -140,7 +140,13 @@ function ContestDetailPage() {
       </div>
 
       {activeTab === "problems" ? (
-        <ProblemsTable problems={contest.problems} />
+        status === "Upcoming" ? (
+          <p className="text-muted-foreground">
+            Problems will be revealed when the contest starts.
+          </p>
+        ) : (
+          <ProblemsTable problems={contest.problems} />
+        )
       ) : (
         <LeaderboardSection contestNumber={contestNumber} />
       )}

@@ -108,74 +108,101 @@ function SubmissionDetailPage() {
             <div>
               <h2 className="text-lg font-semibold">Test Results</h2>
               <div className="mt-2 space-y-2">
-                {submission.testResults.map((tr) => (
-                  <Collapsible key={tr.position} defaultOpen={false}>
-                    <div className="rounded-md border">
-                      <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-4 p-3 text-sm hover:bg-muted/50">
-                        <ChevronRight className="size-4 transition-transform [[data-panel-open]_&]:rotate-90" />
-                        <span className="font-medium">Test {tr.position}</span>
-                        <span
-                          className={
-                            tr.status === "accepted"
-                              ? "text-verdict-accepted"
-                              : "text-verdict-failed"
-                          }
-                        >
-                          {tr.status.replace(/_/g, " ")}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {tr.timeSec}s
-                        </span>
-                        <span className="text-muted-foreground">
-                          {Math.round(tr.memoryKb / 1024)} MB
-                        </span>
-                        {tr.exitCode !== 0 && (
-                          <span className="text-muted-foreground">
-                            exit code {tr.exitCode}
+                {submission.testResults.map((tr) => {
+                  const hasDetails = tr.stdin !== undefined;
+                  return hasDetails ? (
+                    <Collapsible key={tr.position} defaultOpen={false}>
+                      <div className="rounded-md border">
+                        <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-4 p-3 text-sm hover:bg-muted/50">
+                          <ChevronRight className="size-4 transition-transform [[data-panel-open]_&]:rotate-90" />
+                          <span className="font-medium">
+                            Test {tr.position}
                           </span>
-                        )}
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="border-t p-3">
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="rounded-md border p-2">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              stdin
+                          <span
+                            className={
+                              tr.status === "accepted"
+                                ? "text-verdict-accepted"
+                                : "text-verdict-failed"
+                            }
+                          >
+                            {tr.status.replace(/_/g, " ")}
+                          </span>
+                          {tr.timeSec != null && (
+                            <span className="text-muted-foreground">
+                              {tr.timeSec}s
                             </span>
-                            <pre className="mt-1 overflow-x-auto text-xs">
-                              {tr.stdin || "—"}
-                            </pre>
-                          </div>
-                          <div className="rounded-md border p-2">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              expected output
+                          )}
+                          {tr.memoryKb != null && (
+                            <span className="text-muted-foreground">
+                              {Math.round(tr.memoryKb / 1024)} MB
                             </span>
-                            <pre className="mt-1 overflow-x-auto text-xs">
-                              {tr.expectedOutput || "—"}
-                            </pre>
-                          </div>
-                          <div className="rounded-md border p-2">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              stdout
+                          )}
+                          {tr.exitCode != null && tr.exitCode !== 0 && (
+                            <span className="text-muted-foreground">
+                              exit code {tr.exitCode}
                             </span>
-                            <pre className="mt-1 overflow-x-auto text-xs">
-                              {tr.stdout || "—"}
-                            </pre>
+                          )}
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="border-t p-3">
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="rounded-md border p-2">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                stdin
+                              </span>
+                              <pre className="mt-1 overflow-x-auto text-xs">
+                                {tr.stdin || "—"}
+                              </pre>
+                            </div>
+                            <div className="rounded-md border p-2">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                expected output
+                              </span>
+                              <pre className="mt-1 overflow-x-auto text-xs">
+                                {tr.expectedOutput || "—"}
+                              </pre>
+                            </div>
+                            <div className="rounded-md border p-2">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                stdout
+                              </span>
+                              <pre className="mt-1 overflow-x-auto text-xs">
+                                {tr.stdout || "—"}
+                              </pre>
+                            </div>
                           </div>
-                        </div>
-                        {tr.stderr && (
-                          <div className="mt-2">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              stderr
-                            </span>
-                            <pre className="mt-1 overflow-x-auto rounded bg-muted p-2 text-xs">
-                              {tr.stderr}
-                            </pre>
-                          </div>
-                        )}
-                      </CollapsibleContent>
+                          {tr.stderr && (
+                            <div className="mt-2">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                stderr
+                              </span>
+                              <pre className="mt-1 overflow-x-auto rounded bg-muted p-2 text-xs">
+                                {tr.stderr}
+                              </pre>
+                            </div>
+                          )}
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
+                  ) : (
+                    <div
+                      key={tr.position}
+                      className="flex items-center gap-4 rounded-md border p-3 text-sm"
+                    >
+                      <span className="font-medium">
+                        Test {tr.position}
+                      </span>
+                      <span
+                        className={
+                          tr.status === "accepted"
+                            ? "text-verdict-accepted"
+                            : "text-verdict-failed"
+                        }
+                      >
+                        {tr.status.replace(/_/g, " ")}
+                      </span>
                     </div>
-                  </Collapsible>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
