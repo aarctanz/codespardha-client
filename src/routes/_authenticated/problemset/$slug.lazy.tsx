@@ -9,6 +9,9 @@ import { problemQuery, languagesQuery, approachQuery } from "@/lib/queries";
 import { apiFetch } from "@/lib/api";
 import type { RunResult, TestResult } from "@/lib/types";
 import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import Editor from "@monaco-editor/react";
 import { Loader2, GripHorizontal, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -223,7 +226,7 @@ function ProblemPage() {
           </div>
         )}
         <div className="prose prose-sm dark:prose-invert mt-4 max-w-none">
-          <ReactMarkdown>{problem.description}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{problem.description}</ReactMarkdown>
         </div>
 
         {problem.testCases.length > 0 && (

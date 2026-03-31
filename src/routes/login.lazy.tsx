@@ -1,11 +1,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const Route = createLazyFileRoute("/login")({
   component: LoginPage,
@@ -46,7 +42,7 @@ function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-start bg-background px-4 pt-[20vh]">
-      <Card className="w-full max-w-md shadow-lg shadow-black/5 dark:shadow-black/20">
+      <Card className="w-full max-w-md shadow-2xl shadow-black/5 dark:shadow-black/40 py-16 px-2">
         <CardHeader className="flex flex-col items-center gap-6 pb-2">
           <div className="flex items-center gap-5">
             <img
@@ -63,9 +59,9 @@ function LoginPage() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold">Codespardha</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
+            {/*<p className="mt-1.5 text-sm text-muted-foreground">
               Competitive Programming Platform — NIT Kurukshetra
-            </p>
+            </p>*/}
             <p className="mt-3 text-base text-foreground/80">
               Welcome back! Sign in to continue.
             </p>
