@@ -225,7 +225,7 @@ function ProblemPage() {
             ))}
           </div>
         )}
-        <div className="prose prose-sm dark:prose-invert mt-4 max-w-none">
+        <div className="prose prose-base dark:prose-invert mt-4 max-w-none">
           <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{problem.description}</ReactMarkdown>
         </div>
 

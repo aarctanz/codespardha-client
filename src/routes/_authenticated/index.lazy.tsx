@@ -75,7 +75,7 @@ function HomePage() {
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 
   return (
-    <div className="container mx-auto space-y-8">
+    <div className="container mx-auto space-y-8 pb-8">
       {/* Welcome */}
       <div>
         <h1 className="text-3xl font-bold">Hey, {firstName}</h1>
@@ -112,7 +112,12 @@ function HomePage() {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right text-sm text-muted-foreground">
-                <span>Ends in {formatCountdown(new Date(contest.endTime).getTime() - now.getTime())}</span>
+                <span>
+                  Ends in{" "}
+                  {formatCountdown(
+                    new Date(contest.endTime).getTime() - now.getTime(),
+                  )}
+                </span>
               </div>
               <ArrowRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
             </div>
@@ -143,7 +148,9 @@ function HomePage() {
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="font-mono text-sm font-medium tabular-nums">
-                  {formatCountdown(new Date(contest.startTime).getTime() - now.getTime())}
+                  {formatCountdown(
+                    new Date(contest.startTime).getTime() - now.getTime(),
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(contest.startTime).toLocaleTimeString(undefined, {

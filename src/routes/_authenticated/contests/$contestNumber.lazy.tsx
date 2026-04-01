@@ -1,10 +1,27 @@
 import { useState, useEffect, useRef } from "react";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleCheck, Trophy, ChevronLeft, ChevronRight, Clock, Loader2 } from "lucide-react";
+import {
+  useSuspenseQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
+import {
+  CircleCheck,
+  Trophy,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Loader2,
+} from "lucide-react";
 import { contestQuery, leaderboardQuery } from "@/lib/queries";
 import { useServerNow } from "@/hooks/use-server-now";
-import type { Contest, Problem, StandingEntry, ProblemBreakdown } from "@/lib/types";
+import type {
+  Contest,
+  Problem,
+  StandingEntry,
+  ProblemBreakdown,
+} from "@/lib/types";
 import { DifficultyBadge } from "@/components/difficulty-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -97,15 +114,15 @@ function ContestDetailPage() {
       : status === "Upcoming"
         ? new Date(contest.startTime)
         : null;
-  const timerDiff = timerTarget
-    ? timerTarget.getTime() - now.getTime()
-    : 0;
+  const timerDiff = timerTarget ? timerTarget.getTime() - now.getTime() : 0;
 
   return (
     <div className="container mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">{contest.title}</h1>
-        <p className="text-muted-foreground">{contest.description}</p>
+        <div className="prose prose-base dark:prose-invert max-w-none text-muted-foreground">
+          <ReactMarkdown>{contest.description}</ReactMarkdown>
+        </div>
       </div>
       <div className="flex items-center gap-6 text-sm">
         <div>
@@ -182,7 +199,10 @@ function ContestDetailPage() {
           <ProblemsTable problems={contest.problems} />
         )
       ) : (
-        <LeaderboardSection contestNumber={contestNumber} contestStart={contest.startTime} />
+        <LeaderboardSection
+          contestNumber={contestNumber}
+          contestStart={contest.startTime}
+        />
       )}
     </div>
   );
@@ -190,7 +210,9 @@ function ContestDetailPage() {
 
 function ProblemsTable({ problems }: { problems: Problem[] }) {
   if (problems.length === 0) {
-    return <p className="text-muted-foreground">No problems in this contest.</p>;
+    return (
+      <p className="text-muted-foreground">No problems in this contest.</p>
+    );
   }
 
   return (
@@ -231,12 +253,20 @@ function ProblemsTable({ problems }: { problems: Problem[] }) {
   );
 }
 
-function LeaderboardSection({ contestNumber, contestStart }: { contestNumber: string; contestStart: string }) {
+function LeaderboardSection({
+  contestNumber,
+  contestStart,
+}: {
+  contestNumber: string;
+  contestStart: string;
+}) {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useQuery(leaderboardQuery(contestNumber, page));
 
   if (isLoading || !data) {
-    return <p className="text-sm text-muted-foreground">Loading leaderboard...</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Loading leaderboard...</p>
+    );
   }
 
   // Collect all problem labels from standings for table headers
@@ -275,7 +305,9 @@ function LeaderboardSection({ contestNumber, contestStart }: { contestNumber: st
             <span className="text-xl font-bold">#{data.currentUser.rank}</span>
             <Avatar className="size-8">
               <AvatarImage src={data.currentUser.image ?? undefined} />
-              <AvatarFallback>{data.currentUser.name?.charAt(0)}</AvatarFallback>
+              <AvatarFallback>
+                {data.currentUser.name?.charAt(0)}
+              </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <p className="font-medium">{data.currentUser.name}</p>
@@ -286,7 +318,8 @@ function LeaderboardSection({ contestNumber, contestStart }: { contestNumber: st
             <div className="text-right text-sm">
               <p className="font-semibold">{data.currentUser.totalScore} pts</p>
               <p className="text-xs text-muted-foreground">
-                {data.currentUser.problemsSolved} solved · {data.currentUser.penalty} penalty
+                {data.currentUser.problemsSolved} solved ·{" "}
+                {data.currentUser.penalty} penalty
               </p>
             </div>
           </div>
@@ -314,9 +347,7 @@ function LeaderboardSection({ contestNumber, contestStart }: { contestNumber: st
             {data.standings.map((entry) => (
               <TableRow
                 key={entry.rollNumber}
-                className={
-                  isCurrentUser(entry) ? "bg-primary/5" : undefined
-                }
+                className={isCurrentUser(entry) ? "bg-primary/5" : undefined}
               >
                 <TableCell className="font-semibold">{entry.rank}</TableCell>
                 <TableCell>
@@ -347,12 +378,13 @@ function LeaderboardSection({ contestNumber, contestStart }: { contestNumber: st
                   {entry.problemsSolved}
                 </TableCell>
                 {sortedLabels.map(([label]) => {
-                  const pb = entry.breakdown.find(
-                    (b) => b.label === label,
-                  );
+                  const pb = entry.breakdown.find((b) => b.label === label);
                   return (
                     <TableCell key={label} className="text-center">
-                      <ProblemCell breakdown={pb ?? null} contestStart={contestStart} />
+                      <ProblemCell
+                        breakdown={pb ?? null}
+                        contestStart={contestStart}
+                      />
                     </TableCell>
                   );
                 })}

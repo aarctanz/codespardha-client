@@ -1,7 +1,21 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 @import "@fontsource-variable/geist";
+
+@font-face {
+  font-family: "Ioskley Mono";
+  src: url("/fonts/WOFF2/IoskeleyMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Ioskley Mono";
+  src: url("/fonts/WOFF2/IoskeleyMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
 
 @custom-variant dark (&:is(.dark *));
 

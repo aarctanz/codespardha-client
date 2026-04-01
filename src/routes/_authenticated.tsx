@@ -23,9 +23,9 @@ export const Route = createFileRoute("/_authenticated")({
     return { session };
   },
   component: () => (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="px-4 py-6">
+      <main className="flex-1 px-4 py-6">
         <Outlet />
       </main>
     </div>
